@@ -176,3 +176,10 @@ let sumOfIDs = validGames.map(\.ID).reduce(0, +)
 print("Number of valid games: \(validGames.count)")
 print("Sum of valid game IDs: \(sumOfIDs)")
 
+
+let powers = games.map { game in 
+  game.red * game.green * game.blue
+}
+
+let sumOfPowers = powers.reduce(0, +)
+print("Sum of powers: \(sumOfPowers)")
