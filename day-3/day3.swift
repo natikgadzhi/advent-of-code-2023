@@ -69,6 +69,70 @@ struct Board {
   func isDigitCell(_ cell: Cell) -> Bool {
     return self.data[cell.row * size + cell.col].asciiValue! >= 48 && self.data[cell.row * size + cell.col].asciiValue! <= 57
   }
+  
+  /// Given a digit cell (a cell that contains a digit character) returns the full
+  /// `Number`, containint the number itself, and it's left and right boundary.
+  func getNumber(from cell: Cell) -> Number {
+    var number = ""
+    var left = cell
+    var right = cell
+
+    while left.col > 0 && self.isDigitCell(Cell(row: left.row, col: left.col-1)) {
+      left = Cell(row: left.row, col: left.col-1)
+    }
+
+    while right.col < size-1 && self.isDigitCell(Cell(row: right.row, col: right.col+1)) {
+      right = Cell(row: right.row, col: right.col+1)
+    }
+
+    for i in left.col...right.col {
+      number += String(self.getCell(Cell(row: left.row, col: i)))
+    }
+
+    return Number(left: left, right: right, value: Int(number)!)
+  }
+
+  func isGearCell(_ cell: Cell) -> Bool {
+    return self.data[cell.row * size + cell.col] == "*"
+  }
+
+  // I've added this code a couple days after I solved the original day 3 puzzle
+  // so expect some unnecessary complications.
+  func gearRatio() -> Int {
+    var gearRatioSum = 0
+    var gearCells = [Cell]()
+
+    // get all gear cells
+    // get their corresponding numbers
+    // filter out those that have two numbers exactly
+    // calculate their ratio
+
+    // NOTE: Sure, this can be self.data.enumberated().filter { (index, char) in }
+    // but honestly that's probably more complicated to read than a nested loop
+    for i in 0..<size {
+      for j in 0..<size {
+        if self.isGearCell(Cell(row: i, col: j)) {
+          gearCells.append(Cell(row: i, col: j))
+        }
+      }
+    }
+
+    for gearCell in gearCells {
+      var numbers = Set<Number>()
+      for cell in self.getSurroundingCells(gearCell) {
+        if self.isDigitCell(cell) {
+          numbers.insert(self.getNumber(from: cell))
+        }
+      }
+      if numbers.count == 2 {
+        gearRatioSum +=  numbers.reduce(1) {
+          $0 * $1.value
+        }
+      }
+    }
+
+    return gearRatioSum
+  }
 
   func partNumbersSum() -> Int {
     
@@ -108,24 +172,8 @@ struct Board {
     // We should keep track of the numbers and their start coordinates to make sure we only count a number once.
     // Then we parse the number and add it to the sum.
     for digitCell in cellsWithDigits {
-      var number = ""
-      var left = digitCell
-      var right = digitCell
-
-      while left.col > 0 && self.isDigitCell(Cell(row: left.row, col: left.col-1)) {
-        left = Cell(row: left.row, col: left.col-1)
-      }
-
-      while right.col < size-1 && self.isDigitCell(Cell(row: right.row, col: right.col+1)) {
-        right = Cell(row: right.row, col: right.col+1)
-      }
-
-      for i in left.col...right.col {
-        number += String(self.getCell(Cell(row: left.row, col: i)))
-      }
-
-      numbers.insert(Number(left: left, right: right, value: Int(number)!))
-    }    
+      numbers.insert(self.getNumber(from: digitCell))
+    }
     
     return numbers.reduce(0, { $0 + $1.value })
   }
@@ -212,5 +260,4 @@ let board = try! Board(input)
 
 print("Read the board of size: \(board.size)")
 print("The sum of all part numbers is \(board.partNumbersSum())")
-
-
+print("The sum gear ration is: \(board.gearRatio())")
